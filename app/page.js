@@ -1,101 +1,221 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DataChart } from "@/components/DataChart";
+import { Loader2, RefreshCw } from "lucide-react";
+import { generateCompanyData } from "@/lib/aiGenerate";
+import { analyzeCompany } from "@/lib/aiGenerate";
+import { CompanyTable } from "@/components/CompanyTable";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.js
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [companies, setCompanies] = useState([]);
+  const [selectedCompany, setSelectedCompany] = useState(null);
+  const [analysis, setAnalysis] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [error, setError] = useState(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  // 🔹 Fetch Company Data
+  const handleGenerateData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await generateCompanyData();
+      setCompanies(data);
+      setSelectedCompany(null); // Reset selection on new data
+      setAnalysis(null);
+      localStorage.setItem("companyData", JSON.stringify(data));
+    } catch (error) {
+      console.error("Error:", error);
+      setError("Failed to generate company data. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 🔹 Analyze Selected Company
+  const handleAnalyzeCompany = async () => {
+    if (!selectedCompany) {
+      setAnalysis("Please select a company to analyze.");
+      return;
+    }
+
+    try {
+      setAnalyzing(true);
+      const result = await analyzeCompany(selectedCompany);
+      setAnalysis(result.analysis);
+    } catch (error) {
+      console.error("Error analyzing company:", error);
+      setAnalysis("Failed to fetch analysis.");
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
+  return (
+    <div className="p-8">
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-4xl font-bold">Company List</h1>
+        <Button
+          onClick={handleGenerateData}
+          disabled={loading}
+          className="flex items-center gap-2"
+        >
+          {loading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <RefreshCw className="h-4 w-4" />
+          )}
+          Generate Data
+        </Button>
+      </div>
+
+      {error && (
+        <div className="mb-4 p-4 text-red-600 bg-red-50 rounded-md">
+          {error}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      )}
+
+      <Tabs defaultValue="table" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="table">Table View</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="analysis">Company Analysis</TabsTrigger>
+        </TabsList>
+
+        {/* Table View */}
+        <TabsContent value="table" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Company List</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CompanyTable data={companies} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Analytics Section */}
+        <TabsContent value="analytics" className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <Card>
+              <CardHeader>
+                <CardTitle>Companies by Region</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <DataChart data={companies} type="region" />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Industry Focus Distribution</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <DataChart data={companies} type="industry" />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Revenue Distribution ($M)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <DataChart data={companies} type="revenue" />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Market Share (%)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <DataChart data={companies} type="marketShare" />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Employee Count</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <DataChart data={companies} type="employeeSize" />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Technology Stack Usage</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <DataChart data={companies} type="techStack" />
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* Company Analysis Section */}
+        <TabsContent value="analysis" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Analyze a Company</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Show dropdown only when companies exist */}
+              {companies.length > 0 ? (
+                <div className="flex flex-col gap-4">
+                  <label htmlFor="company-select" className="font-medium">
+                    Select a company:
+                  </label>
+                  <select
+                    id="company-select"
+                    value={selectedCompany ? selectedCompany.companyName : ""}
+                    onChange={(e) =>
+                      setSelectedCompany(
+                        companies.find(
+                          (company) => company.companyName === e.target.value
+                        )
+                      )
+                    }
+                    className="border rounded-md p-2 w-full bg-white"
+                  >
+                    <option value="">-- Choose a company --</option>
+                    {companies.map((company) => (
+                      <option
+                        key={company.companyName}
+                        value={company.companyName}
+                      >
+                        {company.companyName}
+                      </option>
+                    ))}
+                  </select>
+
+                  <Button
+                    onClick={handleAnalyzeCompany}
+                    disabled={analyzing || !selectedCompany}
+                  >
+                    {analyzing ? "Analyzing..." : "Analyze"}
+                  </Button>
+                </div>
+              ) : (
+                <p className="text-gray-500">
+                  Generate data to analyze a company.
+                </p>
+              )}
+
+              {/* Display analysis results */}
+              {analysis && (
+                <div className="mt-4 p-4 bg-gray-100 rounded-md">
+                  <pre className="whitespace-pre-wrap text-sm">{analysis}</pre>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
