@@ -21,6 +21,7 @@ export function CompanyTable({ data }) {
 
   // Define column headers
   const columns = [
+    { header: "No.", accessorKey: "index" }, // New Index Column
     { header: "Company Name", accessorKey: "companyName" },
     { header: "Region", accessorKey: "region" },
     {
@@ -58,9 +59,10 @@ export function CompanyTable({ data }) {
     const headers = columns.map((column) => column.header).join(",");
 
     // Create CSV rows
-    const rows = data.map((item) =>
+    const rows = data.map((item, index) =>
       columns
         .map((column) => {
+          if (column.accessorKey === "index") return index + 1; // Assign index
           const key = column.accessorKey;
           const value = item[key] || ""; // Handle missing values
           return `"${String(value).replace(/"/g, '""')}"`; // Escape quotes
@@ -84,7 +86,8 @@ export function CompanyTable({ data }) {
   return (
     <div>
       {/* Export Button */}
-      <div className="mb-4 flex justify-end">
+      <div className="mb-4 flex justify-between">
+        <p className="text-lg font-bold">Company List ({data.length})</p>
         <Button
           onClick={exportToCsv}
           disabled={data.length === 0}
@@ -112,8 +115,10 @@ export function CompanyTable({ data }) {
               <TableRow key={index}>
                 {columns.map((column) => (
                   <TableCell key={column.accessorKey} className="text-sm">
-                    {/* If it's a link, show an icon */}
-                    {column.isLink && company[column.accessorKey] ? (
+                    {/* Show index number in "No." column */}
+                    {column.accessorKey === "index" ? (
+                      index + 1
+                    ) : column.isLink && company[column.accessorKey] ? (
                       <a
                         href={company[column.accessorKey]}
                         target="_blank"

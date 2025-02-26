@@ -25,7 +25,7 @@ const CompanyFinder = () => {
       const prompt = `Provide the official website and LinkedIn profile of the company "${company}". Format the response as: Website: <website_url>, LinkedIn: <linkedin_url>`;
 
       const result = await model.generateContent(prompt);
-      const responseText = await result.response.text();
+      const responseText = result.response.text();
 
       const websiteMatch = responseText.match(/Website: (https?:\/\/[^\s]+)/);
       const linkedinMatch = responseText.match(/LinkedIn: (https?:\/\/[^\s]+)/);
@@ -56,7 +56,7 @@ const CompanyFinder = () => {
         className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
         disabled={loading}
       >
-        {loading ? "Generating..." : "Generate"}
+        {loading ? "Please Wait..." : "Generate"}
       </button>
 
       {website && (

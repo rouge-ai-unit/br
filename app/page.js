@@ -12,6 +12,7 @@ import { CompanyTable } from "@/components/CompanyTable";
 
 export default function Home() {
   const [companies, setCompanies] = useState([]);
+  const [CompanyList, setCompanyList] = useState("");
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [analysis, setAnalysis] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -23,8 +24,21 @@ export default function Home() {
     try {
       setLoading(true);
       setError(null);
-      const data = await generateCompanyData();
-      setCompanies(data);
+      const data = await generateCompanyData(CompanyList);
+      setCompanies((prevCompanies) => [...prevCompanies, ...data]);
+
+      // Extract company names and store as a comma-separated string
+      const companyNames = [...data]
+        .map((company) => company.companyName)
+        .join(", ");
+      setCompanyList((prevList) =>
+        prevList ? `${prevList}, ${companyNames}` : companyNames
+      );
+
+      console.log(CompanyList);
+      console.log(companyNames);
+
+      console.log(data);
       setSelectedCompany(null); // Reset selection on new data
       setAnalysis(null);
       localStorage.setItem("companyData", JSON.stringify(data));
@@ -89,10 +103,7 @@ export default function Home() {
         {/* Table View */}
         <TabsContent value="table" className="space-y-4">
           <Card>
-            <CardHeader>
-              <CardTitle>Company List</CardTitle>
-            </CardHeader>
-            <CardContent>
+            <CardContent className="mt-5">
               <CompanyTable data={companies} />
             </CardContent>
           </Card>
