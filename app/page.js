@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,6 +9,8 @@ import { Loader2, RefreshCw } from "lucide-react";
 import { generateCompanyData } from "@/lib/aiGenerate";
 import { analyzeCompany } from "@/lib/aiGenerate";
 import { CompanyTable } from "@/components/CompanyTable";
+import { db } from "@/utils/dbConfig";
+import { Companies } from "@/utils/schema";
 
 export default function Home() {
   const [companies, setCompanies] = useState([]);
@@ -19,26 +21,61 @@ export default function Home() {
   const [analyzing, setAnalyzing] = useState(false);
   const [error, setError] = useState(null);
 
+  useEffect(() => {
+    fetchCompanyList();
+  }, []);
+
+  // 🔹 Fetch Company Lis
+  const fetchCompanyList = async () => {
+    const comp_response = await fetch(`/api/companies`);
+    const companies = await comp_response.json();
+
+    setCompanies(companies);
+
+    // Extract company names and store as a comma-separated string
+    const companyNames = [...companies]
+      .map((company) => company.companyName)
+      .join(", ");
+    setCompanyList((prevList) =>
+      prevList ? `${prevList}, ${companyNames}` : companyNames
+    );
+
+    console.log(companyNames)
+  };
+
+  const refreshData = () => {
+    fetchCompanyList();
+  };
+
   // 🔹 Fetch Company Data
   const handleGenerateData = async () => {
     try {
       setLoading(true);
       setError(null);
       const data = await generateCompanyData(CompanyList);
-      setCompanies((prevCompanies) => [...prevCompanies, ...data]);
 
-      // Extract company names and store as a comma-separated string
-      const companyNames = [...data]
-        .map((company) => company.companyName)
-        .join(", ");
-      setCompanyList((prevList) =>
-        prevList ? `${prevList}, ${companyNames}` : companyNames
-      );
+      for (const company of data) {
+        await db
+          .insert(Companies)
+          .values({
+            companyName: company.companyName,
+            region: company.region,
+            companyWebsite: company.companyWebsite,
+            companyLinkedin: company.companyLinkedin,
+            industryFocus: company.industryFocus,
+            offerings: company.offerings,
+            marketingPosition: company.marketingPosition,
+            potentialPainPoints: company.potentialPainPoints,
+            contactName: company.contactName,
+            contactPosition: company.contactPosition,
+            linkedin: company.linkedin,
+            contactEmail: company.contactEmail,
+          })
+          .returning({ companyName: Companies.companyName });
+      }
 
-      console.log(CompanyList);
-      console.log(companyNames);
+      refreshData();
 
-      console.log(data);
       setSelectedCompany(null); // Reset selection on new data
       setAnalysis(null);
       localStorage.setItem("companyData", JSON.stringify(data));
@@ -104,7 +141,7 @@ export default function Home() {
         <TabsContent value="table" className="space-y-4">
           <Card>
             <CardContent className="mt-5">
-              <CompanyTable data={companies} />
+              <CompanyTable data={companies} refreshData={() => refreshData()} />
             </CardContent>
           </Card>
         </TabsContent>

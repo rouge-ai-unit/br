@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useState } from "react";
 import {
   Table,
   TableBody,
@@ -10,134 +11,277 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Download, Globe, Linkedin } from "lucide-react"; // Import icons
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Download, Globe, Linkedin, Pencil, Trash } from "lucide-react";
+import { db } from "@/utils/dbConfig";
+import { toast } from "sonner";
+import { Companies } from "@/utils/schema";
+import { eq } from "drizzle-orm";
 
-export function CompanyTable({ data }) {
-  if (!data || data.length === 0) {
-    return (
-      <p className="text-center text-gray-500">No company data available.</p>
-    );
-  }
+export function CompanyTable({ data, refreshData }) {
+  const [selectedCompany, setSelectedCompany] = useState(null);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [editData, setEditData] = useState({}); // For storing edited data
 
-  // Define column headers
-  const columns = [
-    { header: "No.", accessorKey: "index" }, // New Index Column
-    { header: "Company Name", accessorKey: "companyName" },
-    { header: "Region", accessorKey: "region" },
-    {
-      header: "Website",
-      accessorKey: "companyWebsite",
-      isLink: true,
-      icon: <Globe className="h-4 w-4 text-blue-500" />,
-    },
-    {
-      header: "LinkedIn",
-      accessorKey: "companyLinkedin",
-      isLink: true,
-      icon: <Linkedin className="h-4 w-4 text-blue-500" />,
-    },
-    { header: "Industry Focus", accessorKey: "industryFocus" },
-    { header: "Offerings", accessorKey: "offerings" },
-    { header: "Marketing Position", accessorKey: "marketingPosition" },
-    { header: "Potential Pain Points", accessorKey: "potentialPainPoints" },
-    { header: "Contact Name", accessorKey: "contactName" },
-    { header: "Contact Position", accessorKey: "contactPosition" },
-    {
-      header: "Contact LinkedIn",
-      accessorKey: "linkedin",
-      isLink: true,
-      icon: <Linkedin className="h-4 w-4 text-blue-500" />,
-    },
-    { header: "Contact Email", accessorKey: "contactEmail" },
-  ];
+  // Open edit dialog and pre-fill form
+  const handleEdit = (company) => {
+    setSelectedCompany(company);
+    setEditData(company);
+    setIsEditOpen(true);
+  };
 
-  // Function to export data as CSV
-  const exportToCsv = () => {
-    if (data.length === 0) return;
+  // Open delete confirmation dialog
+  const handleDelete = (company) => {
+    setSelectedCompany(company);
+    setIsDeleteOpen(true);
+  };
 
-    // Create CSV headers
-    const headers = columns.map((column) => column.header).join(",");
+  // Handle delete confirmation
+  const confirmDelete = async () => {
+    if (!selectedCompany) return;
+    await db.delete(Companies).where(eq(Companies.id, selectedCompany.id));
+    refreshData();
+    toast.success("Company deleted successfully.");
+    setIsDeleteOpen(false);
+    setSelectedCompany(null);
+  };
 
-    // Create CSV rows
-    const rows = data.map((item, index) =>
-      columns
-        .map((column) => {
-          if (column.accessorKey === "index") return index + 1; // Assign index
-          const key = column.accessorKey;
-          const value = item[key] || ""; // Handle missing values
-          return `"${String(value).replace(/"/g, '""')}"`; // Escape quotes
-        })
-        .join(",")
-    );
+  // Edit company data
+  const handleEditCompany = async () => {
+    if (!selectedCompany) return;
+    await db
+      .update(Companies)
+      .set({
+        companyName: editData.companyName,
+        region: editData.region,
+        companyWebsite: editData.companyWebsite,
+        companyLinkedin: editData.companyLinkedin,
+        industryFocus: editData.industryFocus,
+        offerings: editData.offerings,
+        marketingPosition: editData.marketingPosition,
+        potentialPainPoints: editData.potentialPainPoints,
+        contactName: editData.contactName,
+        contactPosition: editData.contactPosition,
+        linkedin: editData.linkedin,
+        contactEmail: editData.contactEmail,
+      })
+      .where(eq(Companies.id, editData.id))
+      .returning();
 
-    // Combine headers and rows
-    const csv = [headers, ...rows].join("\n");
-
-    // Create and trigger download
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "companies.csv";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    refreshData();
+    toast.success("Company updated successfully.");
+    setIsEditOpen(false);
+    setSelectedCompany(null);
+    console.log(editData);
   };
 
   return (
     <div>
-      {/* Export Button */}
-      <div className="mb-4 flex justify-between">
-        <p className="text-lg font-bold">Company List ({data.length})</p>
-        <Button
-          onClick={exportToCsv}
-          disabled={data.length === 0}
-          variant="outline"
-          className="flex items-center gap-2"
-        >
-          <Download className="h-4 w-4" />
-          Export CSV
-        </Button>
-      </div>
-
       {/* Table */}
       <div className="rounded-md border overflow-x-auto">
         <Table>
           <TableCaption>A list of AgTech companies.</TableCaption>
           <TableHeader>
             <TableRow>
-              {columns.map((column) => (
-                <TableHead key={column.accessorKey}>{column.header}</TableHead>
-              ))}
+              <TableHead>Edit/Delete</TableHead>
+              <TableHead>No.</TableHead>
+              <TableHead>Company Name</TableHead>
+              <TableHead>Company Wesbite</TableHead>
+              <TableHead>Company Linkedin</TableHead>
+              <TableHead>Region</TableHead>
+              <TableHead>Industry Focus</TableHead>
+              <TableHead>Offerings</TableHead>
+              <TableHead>Marketing Position</TableHead>
+              <TableHead>Potential Pain Points</TableHead>
+              <TableHead>Contact Name</TableHead>
+              <TableHead>Contact Position</TableHead>
+              <TableHead>Contact Linkedin</TableHead>
+              <TableHead>Contact Email</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {data.map((company, index) => (
               <TableRow key={index}>
-                {columns.map((column) => (
-                  <TableCell key={column.accessorKey} className="text-sm">
-                    {/* Show index number in "No." column */}
-                    {column.accessorKey === "index" ? (
-                      index + 1
-                    ) : column.isLink && company[column.accessorKey] ? (
-                      <a
-                        href={company[column.accessorKey]}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-blue-500 hover:underline"
-                      >
-                        {column.icon}
-                        <span>Visit</span>
-                      </a>
-                    ) : (
-                      company[column.accessorKey] || "N/A"
-                    )}
-                  </TableCell>
-                ))}
+                <TableCell>
+                  <div className="flex gap-2 items-center">
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      onClick={() => handleEdit(company)}
+                    >
+                      <Pencil className="h-4 w-4 text-blue-500" />
+                    </Button>
+                    /
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      className=""
+                      onClick={() => handleDelete(company)}
+                    >
+                      <Trash className="h-4 w-4 text-red-500" />
+                    </Button>
+                  </div>
+                </TableCell>
+                <TableCell>{index + 1}</TableCell>
+                <TableCell>{company.companyName}</TableCell>
+                <TableCell>{company.companyWebsite}</TableCell>
+                <TableCell>{company.companyLinkedin}</TableCell>
+                <TableCell>{company.region}</TableCell>
+                <TableCell>{company.industryFocus}</TableCell>
+                <TableCell>{company.offerings}</TableCell>
+                <TableCell>{company.marketingPosition}</TableCell>
+                <TableCell>{company.potentialPainPoints}</TableCell>
+                <TableCell>{company.contactName}</TableCell>
+                <TableCell>{company.contactPosition}</TableCell>
+                <TableCell>{company.linkedin}</TableCell>
+                <TableCell>{company.contactEmail}</TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </div>
+
+      {/* Edit Dialog */}
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Company</DialogTitle>
+            <DialogDescription>
+              Edit details for {selectedCompany?.companyName}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <label htmlFor="companyName">Company Name</label>
+            <Input
+              value={editData.companyName || ""}
+              onChange={(e) =>
+                setEditData({ ...editData, companyName: e.target.value })
+              }
+              placeholder="Company Name"
+              id="companyName"
+            />
+            <label htmlFor="region">Region</label>
+            <Input
+              value={editData.region || ""}
+              onChange={(e) =>
+                setEditData({ ...editData, region: e.target.value })
+              }
+              placeholder="Region"
+              id="region"
+            />
+            <label htmlFor="industryFocus">Industry Focus</label>
+            <Input
+              value={editData.industryFocus || ""}
+              onChange={(e) =>
+                setEditData({ ...editData, industryFocus: e.target.value })
+              }
+              placeholder="Industry Focus"
+              id="industryFocus"
+            />
+            <label htmlFor="offerings">Offerings</label>
+            <Input
+              value={editData.offerings || ""}
+              onChange={(e) =>
+                setEditData({ ...editData, offerings: e.target.value })
+              }
+              placeholder="Offerings"
+              id="offerings"
+            />
+            <label htmlFor="marketingPosition">Marketing Position</label>
+            <Input
+              value={editData.marketingPosition || ""}
+              onChange={(e) =>
+                setEditData({ ...editData, marketingPosition: e.target.value })
+              }
+              placeholder="Marketing Position"
+              id="marketingPosition"
+            />
+            <label htmlFor="potentialPainPoints">Potential Pain Points</label>
+            <Input
+              value={editData.potentialPainPoints || ""}
+              onChange={(e) =>
+                setEditData({
+                  ...editData,
+                  potentialPainPoints: e.target.value,
+                })
+              }
+              placeholder="Potential Pain Points"
+              id="potentialPainPoints"
+            />
+            <label htmlFor="contactName">Contact Name</label>
+            <Input
+              value={editData.contactName || ""}
+              onChange={(e) =>
+                setEditData({ ...editData, contactName: e.target.value })
+              }
+              placeholder="Contact Name"
+              id="contactName"
+            />
+            <label htmlFor="contactPosition">Contact Position</label>
+            <Input
+              value={editData.contactPosition || ""}
+              onChange={(e) =>
+                setEditData({ ...editData, contactPosition: e.target.value })
+              }
+              placeholder="Contact Position"
+              id="contactPosition"
+            />
+            <label htmlFor="linkedin">Contact Linkedin</label>
+            <Input
+              value={editData.linkedin || ""}
+              onChange={(e) =>
+                setEditData({ ...editData, linkedin: e.target.value })
+              }
+              placeholder="Contact Linkedin"
+              id="linkedin"
+            />
+            <label htmlFor="contactEmail">Contact Email</label>
+            <Input
+              value={editData.contactEmail || ""}
+              onChange={(e) =>
+                setEditData({ ...editData, contactEmail: e.target.value })
+              }
+              placeholder="Contact Email"
+              id="contactEmail"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleEditCompany}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Delete</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete {selectedCompany?.companyName}?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="destructive" onClick={confirmDelete}>
+              Delete
+            </Button>
+            <Button variant="outline" onClick={() => setIsDeleteOpen(false)}>
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
