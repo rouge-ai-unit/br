@@ -20,11 +20,19 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Download, Globe, Linkedin, Pencil, Trash } from "lucide-react";
+import {
+  Download,
+  Globe,
+  LinkIcon,
+  Linkedin,
+  Pencil,
+  Trash,
+} from "lucide-react";
 import { db } from "@/utils/dbConfig";
 import { toast } from "sonner";
 import { Companies } from "@/utils/schema";
 import { eq } from "drizzle-orm";
+import Link from "next/link";
 
 export function CompanyTable({ data, refreshData }) {
   const [selectedCompany, setSelectedCompany] = useState(null);
@@ -152,7 +160,7 @@ export function CompanyTable({ data, refreshData }) {
 
       {/* Edit Dialog */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent>
+        <DialogContent className="fixed h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Company</DialogTitle>
             <DialogDescription>
@@ -160,99 +168,195 @@ export function CompanyTable({ data, refreshData }) {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
-            <label htmlFor="companyName">Company Name</label>
-            <Input
-              value={editData.companyName || ""}
-              onChange={(e) =>
-                setEditData({ ...editData, companyName: e.target.value })
-              }
-              placeholder="Company Name"
-              id="companyName"
-            />
-            <label htmlFor="region">Region</label>
-            <Input
-              value={editData.region || ""}
-              onChange={(e) =>
-                setEditData({ ...editData, region: e.target.value })
-              }
-              placeholder="Region"
-              id="region"
-            />
-            <label htmlFor="industryFocus">Industry Focus</label>
-            <Input
-              value={editData.industryFocus || ""}
-              onChange={(e) =>
-                setEditData({ ...editData, industryFocus: e.target.value })
-              }
-              placeholder="Industry Focus"
-              id="industryFocus"
-            />
-            <label htmlFor="offerings">Offerings</label>
-            <Input
-              value={editData.offerings || ""}
-              onChange={(e) =>
-                setEditData({ ...editData, offerings: e.target.value })
-              }
-              placeholder="Offerings"
-              id="offerings"
-            />
-            <label htmlFor="marketingPosition">Marketing Position</label>
-            <Input
-              value={editData.marketingPosition || ""}
-              onChange={(e) =>
-                setEditData({ ...editData, marketingPosition: e.target.value })
-              }
-              placeholder="Marketing Position"
-              id="marketingPosition"
-            />
-            <label htmlFor="potentialPainPoints">Potential Pain Points</label>
-            <Input
-              value={editData.potentialPainPoints || ""}
-              onChange={(e) =>
-                setEditData({
-                  ...editData,
-                  potentialPainPoints: e.target.value,
-                })
-              }
-              placeholder="Potential Pain Points"
-              id="potentialPainPoints"
-            />
-            <label htmlFor="contactName">Contact Name</label>
-            <Input
-              value={editData.contactName || ""}
-              onChange={(e) =>
-                setEditData({ ...editData, contactName: e.target.value })
-              }
-              placeholder="Contact Name"
-              id="contactName"
-            />
-            <label htmlFor="contactPosition">Contact Position</label>
-            <Input
-              value={editData.contactPosition || ""}
-              onChange={(e) =>
-                setEditData({ ...editData, contactPosition: e.target.value })
-              }
-              placeholder="Contact Position"
-              id="contactPosition"
-            />
-            <label htmlFor="linkedin">Contact Linkedin</label>
-            <Input
-              value={editData.linkedin || ""}
-              onChange={(e) =>
-                setEditData({ ...editData, linkedin: e.target.value })
-              }
-              placeholder="Contact Linkedin"
-              id="linkedin"
-            />
-            <label htmlFor="contactEmail">Contact Email</label>
-            <Input
-              value={editData.contactEmail || ""}
-              onChange={(e) =>
-                setEditData({ ...editData, contactEmail: e.target.value })
-              }
-              placeholder="Contact Email"
-              id="contactEmail"
-            />
+            <div>
+              <label htmlFor="companyName" className="text-xs font-bold">
+                Company Name
+              </label>
+              <Input
+                value={editData.companyName || ""}
+                onChange={(e) =>
+                  setEditData({ ...editData, companyName: e.target.value })
+                }
+                placeholder="Company Name"
+                id="companyName"
+              />
+            </div>
+            <div>
+              <label htmlFor="companyWebsite" className="text-xs font-bold">
+                Company Website
+              </label>
+              <div className="flex items-center gap-2 ">
+                <Input
+                  value={editData.companyWebsite || ""}
+                  onChange={(e) =>
+                    setEditData({ ...editData, companyWebsite: e.target.value })
+                  }
+                  placeholder="Company Website"
+                  id="companyWebsite"
+                />
+                <Link href={editData.companyWebsite} target="_blank">
+                  <Button>
+                    <LinkIcon />
+                  </Button>
+                </Link>
+              </div>
+            </div>
+            <div>
+              <label htmlFor="companyLinkedin" className="text-xs font-bold">
+                Company Linkedin
+              </label>
+              <div className="flex items-center gap-2 ">
+                <Input
+                  value={editData.companyLinkedin || ""}
+                  onChange={(e) =>
+                    setEditData({
+                      ...editData,
+                      companyLinkedin: e.target.value,
+                    })
+                  }
+                  placeholder="Company Linkedin"
+                  id="companyLinkedin"
+                />
+                <Link href={editData.companyWebsite} target="_blank">
+                  <Button>
+                    <LinkIcon />
+                  </Button>
+                </Link>
+              </div>
+            </div>
+            <div>
+              <label htmlFor="region" className="text-xs font-bold">
+                Region
+              </label>
+              <Input
+                value={editData.region || ""}
+                onChange={(e) =>
+                  setEditData({ ...editData, region: e.target.value })
+                }
+                placeholder="Region"
+                id="region"
+              />
+            </div>
+            <div>
+              <label htmlFor="industryFocus" className="text-xs font-bold">
+                Industry Focus
+              </label>
+              <Input
+                value={editData.industryFocus || ""}
+                onChange={(e) =>
+                  setEditData({ ...editData, industryFocus: e.target.value })
+                }
+                placeholder="Industry Focus"
+                id="industryFocus"
+              />
+            </div>
+            <div>
+              <label htmlFor="offerings" className="text-xs font-bold">
+                Offerings
+              </label>
+              <Input
+                value={editData.offerings || ""}
+                onChange={(e) =>
+                  setEditData({ ...editData, offerings: e.target.value })
+                }
+                placeholder="Offerings"
+                id="offerings"
+              />
+            </div>
+            <div>
+              <label htmlFor="marketingPosition" className="text-xs font-bold">
+                Marketing Position
+              </label>
+              <Input
+                value={editData.marketingPosition || ""}
+                onChange={(e) =>
+                  setEditData({
+                    ...editData,
+                    marketingPosition: e.target.value,
+                  })
+                }
+                placeholder="Marketing Position"
+                id="marketingPosition"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="potentialPainPoints"
+                className="text-xs font-bold"
+              >
+                Potential Pain Points
+              </label>
+              <Input
+                value={editData.potentialPainPoints || ""}
+                onChange={(e) =>
+                  setEditData({
+                    ...editData,
+                    potentialPainPoints: e.target.value,
+                  })
+                }
+                placeholder="Potential Pain Points"
+                id="potentialPainPoints"
+              />
+            </div>
+            <div>
+              <label htmlFor="contactName" className="text-xs font-bold">
+                Contact Name
+              </label>
+              <Input
+                value={editData.contactName || ""}
+                onChange={(e) =>
+                  setEditData({ ...editData, contactName: e.target.value })
+                }
+                placeholder="Contact Name"
+                id="contactName"
+              />
+            </div>
+            <div>
+              <label htmlFor="contactPosition" className="text-xs font-bold">
+                Contact Position
+              </label>
+              <Input
+                value={editData.contactPosition || ""}
+                onChange={(e) =>
+                  setEditData({ ...editData, contactPosition: e.target.value })
+                }
+                placeholder="Contact Position"
+                id="contactPosition"
+              />
+            </div>
+            <div>
+              <label htmlFor="linkedin" className="text-xs font-bold">
+                Contact Linkedin
+              </label>
+              <div className="flex items-center gap-2">
+                <Input
+                  value={editData.linkedin || ""}
+                  onChange={(e) =>
+                    setEditData({ ...editData, linkedin: e.target.value })
+                  }
+                  placeholder="Contact Linkedin"
+                  id="linkedin"
+                />
+                <Link href={editData.linkedin} target="_blank">
+                  <Button>
+                    <LinkIcon />
+                  </Button>
+                </Link>
+              </div>
+            </div>
+            <div>
+              <label htmlFor="contactEmail" className="text-xs font-bold">
+                Contact Email
+              </label>
+              <Input
+                value={editData.contactEmail || ""}
+                onChange={(e) =>
+                  setEditData({ ...editData, contactEmail: e.target.value })
+                }
+                placeholder="Contact Email"
+                id="contactEmail"
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditOpen(false)}>
