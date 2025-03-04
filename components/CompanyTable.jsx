@@ -23,7 +23,7 @@ import {
 import {
   Download,
   Globe,
-  LinkIcon,
+  ExternalLink,
   Linkedin,
   Pencil,
   Trash,
@@ -33,6 +33,7 @@ import { toast } from "sonner";
 import { Companies } from "@/utils/schema";
 import { eq } from "drizzle-orm";
 import Link from "next/link";
+import { FaLinkedin } from "react-icons/fa";
 
 export function CompanyTable({ data, refreshData }) {
   const [selectedCompany, setSelectedCompany] = useState(null);
@@ -92,8 +93,68 @@ export function CompanyTable({ data, refreshData }) {
     console.log(editData);
   };
 
+  // Function to export data as CSV
+  const exportToCsv = () => {
+    if (!data || data.length === 0) return;
+
+    // Define CSV headers
+    const headers = [
+      "No.",
+      "Company Name",
+      "Company Website",
+      "Company LinkedIn",
+      "Region",
+      "Industry Focus",
+      "Offerings",
+      "Marketing Position",
+      "Potential Pain Points",
+      "Contact Name",
+      "Contact Position",
+      "Contact LinkedIn",
+      "Contact Email",
+    ].join(",");
+
+    // Map data to CSV format
+    const rows = data.map((company, index) =>
+      [
+        index + 1,
+        company.companyName,
+        company.companyWebsite || "N/A",
+        company.companyLinkedin || "N/A",
+        company.region,
+        company.industryFocus,
+        company.offerings,
+        company.marketingPosition,
+        company.potentialPainPoints,
+        company.contactName,
+        company.contactPosition,
+        company.linkedin || "N/A",
+        company.contactEmail,
+      ]
+        .map((value) => `"${String(value).replace(/"/g, '""')}"`)
+        .join(",")
+    );
+
+    // Create CSV content
+    const csv = [headers, ...rows].join("\n");
+
+    // Trigger file download
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "companies.csv";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div>
+      <div className="flex justify-end mb-2">
+        <Button onClick={exportToCsv}>
+          <Download /> Export CSV
+        </Button>
+      </div>
       {/* Table */}
       <div className="rounded-md border overflow-x-auto">
         <Table>
@@ -103,8 +164,8 @@ export function CompanyTable({ data, refreshData }) {
               <TableHead>Edit/Delete</TableHead>
               <TableHead>No.</TableHead>
               <TableHead>Company Name</TableHead>
-              <TableHead>Company Wesbite</TableHead>
-              <TableHead>Company Linkedin</TableHead>
+              <TableHead>Company Website</TableHead>
+              <TableHead>Company LinkedIn</TableHead>
               <TableHead>Region</TableHead>
               <TableHead>Industry Focus</TableHead>
               <TableHead>Offerings</TableHead>
@@ -112,48 +173,94 @@ export function CompanyTable({ data, refreshData }) {
               <TableHead>Potential Pain Points</TableHead>
               <TableHead>Contact Name</TableHead>
               <TableHead>Contact Position</TableHead>
-              <TableHead>Contact Linkedin</TableHead>
+              <TableHead>Contact LinkedIn</TableHead>
               <TableHead>Contact Email</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.map((company, index) => (
-              <TableRow key={index}>
-                <TableCell>
-                  <div className="flex gap-2 items-center">
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      onClick={() => handleEdit(company)}
-                    >
-                      <Pencil className="h-4 w-4 text-blue-500" />
-                    </Button>
-                    /
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      className=""
-                      onClick={() => handleDelete(company)}
-                    >
-                      <Trash className="h-4 w-4 text-red-500" />
-                    </Button>
-                  </div>
+            {data && data.length > 0 ? (
+              data.map((company, index) => (
+                <TableRow key={index}>
+                  <TableCell>
+                    <div className="flex gap-2 items-center">
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        onClick={() => handleEdit(company)}
+                      >
+                        <Pencil className="h-4 w-4 text-blue-500" />
+                      </Button>
+                      /
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        onClick={() => handleDelete(company)}
+                      >
+                        <Trash className="h-4 w-4 text-red-500" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                  <TableCell>{index + 1}</TableCell>
+                  <TableCell>{company.companyName}</TableCell>
+                  <TableCell>
+                    {company.companyWebsite ? (
+                      <a
+                        href={company.companyWebsite}
+                        target="_blank"
+                        className="flex items-centercenter gap-1 text-blue-500 hover:underline"
+                      >
+                        Visit <ExternalLink size={20} />
+                      </a>
+                    ) : (
+                      "N/A"
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {company.companyLinkedin ? (
+                      <a
+                        href={company.companyLinkedin}
+                        target="_blank"
+                        className="flex items-center gap-1 text-blue-500 hover:underline"
+                      >
+                        <FaLinkedin /> LinkedIn
+                      </a>
+                    ) : (
+                      "N/A"
+                    )}
+                  </TableCell>
+                  <TableCell>{company.region}</TableCell>
+                  <TableCell>{company.industryFocus}</TableCell>
+                  <TableCell>{company.offerings}</TableCell>
+                  <TableCell>{company.marketingPosition}</TableCell>
+                  <TableCell>{company.potentialPainPoints}</TableCell>
+                  <TableCell>{company.contactName}</TableCell>
+                  <TableCell>{company.contactPosition}</TableCell>
+                  <TableCell>
+                    {company.linkedin ? (
+                      <a
+                        href={company.linkedin}
+                        target="_blank"
+                        className="flex items-center gap-1 text-blue-500 hover:underline"
+                      >
+                        <FaLinkedin /> LinkedIn
+                      </a>
+                    ) : (
+                      "N/A"
+                    )}
+                  </TableCell>
+                  <TableCell>{company.contactEmail}</TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan="14"
+                  className="text-center text-gray-500 py-4"
+                >
+                  No data available
                 </TableCell>
-                <TableCell>{index + 1}</TableCell>
-                <TableCell>{company.companyName}</TableCell>
-                <TableCell>{company.companyWebsite}</TableCell>
-                <TableCell>{company.companyLinkedin}</TableCell>
-                <TableCell>{company.region}</TableCell>
-                <TableCell>{company.industryFocus}</TableCell>
-                <TableCell>{company.offerings}</TableCell>
-                <TableCell>{company.marketingPosition}</TableCell>
-                <TableCell>{company.potentialPainPoints}</TableCell>
-                <TableCell>{company.contactName}</TableCell>
-                <TableCell>{company.contactPosition}</TableCell>
-                <TableCell>{company.linkedin}</TableCell>
-                <TableCell>{company.contactEmail}</TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </div>
@@ -196,7 +303,7 @@ export function CompanyTable({ data, refreshData }) {
                 />
                 <Link href={editData.companyWebsite} target="_blank">
                   <Button>
-                    <LinkIcon />
+                    <ExternalLink />
                   </Button>
                 </Link>
               </div>
@@ -219,7 +326,7 @@ export function CompanyTable({ data, refreshData }) {
                 />
                 <Link href={editData.companyWebsite} target="_blank">
                   <Button>
-                    <LinkIcon />
+                    <ExternalLink />
                   </Button>
                 </Link>
               </div>
@@ -339,7 +446,7 @@ export function CompanyTable({ data, refreshData }) {
                 />
                 <Link href={editData.linkedin} target="_blank">
                   <Button>
-                    <LinkIcon />
+                    <ExternalLink />
                   </Button>
                 </Link>
               </div>
