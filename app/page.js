@@ -11,10 +11,13 @@ import { analyzeCompany } from "@/lib/aiGenerate";
 import { CompanyTable } from "@/components/CompanyTable";
 import { db } from "@/utils/dbConfig";
 import { Companies } from "@/utils/schema";
+import { toast } from "sonner";
+import { MailList } from "@/components/MailingList";
 
 export default function Home() {
   const [companies, setCompanies] = useState([]);
   const [CompanyList, setCompanyList] = useState("");
+  const [mailingList, setMailingList] = useState([]);
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [analysis, setAnalysis] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -30,7 +33,11 @@ export default function Home() {
     const comp_response = await fetch(`/api/companies`);
     const companies = await comp_response.json();
 
+    const mail_response = await fetch(`/api/mailing-list`);
+    const mails = await mail_response.json();
+
     setCompanies(companies);
+    setMailingList(mails);
 
     // Extract company names and store as a comma-separated string
     const companyNames = [...companies]
@@ -40,7 +47,7 @@ export default function Home() {
       prevList ? `${prevList}, ${companyNames}` : companyNames
     );
 
-    console.log(companyNames)
+    console.log(companyNames);
   };
 
   const refreshData = () => {
@@ -74,6 +81,7 @@ export default function Home() {
           .returning({ companyName: Companies.companyName });
       }
 
+      toast.success("8 Unique Company Details Generated!");
       refreshData();
 
       setSelectedCompany(null); // Reset selection on new data
@@ -109,7 +117,9 @@ export default function Home() {
   return (
     <div className="p-8">
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-4xl font-bold">Company List</h1>
+        <h1 className="text-4xl font-bold">
+          Company List ({companies.length})
+        </h1>
         <Button
           onClick={handleGenerateData}
           disabled={loading}
@@ -133,6 +143,7 @@ export default function Home() {
       <Tabs defaultValue="table" className="space-y-4">
         <TabsList>
           <TabsTrigger value="table">Table View</TabsTrigger>
+          {/* <TabsTrigger value="mail">Mail List</TabsTrigger> */}
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
           <TabsTrigger value="analysis">Company Analysis</TabsTrigger>
         </TabsList>
@@ -141,7 +152,10 @@ export default function Home() {
         <TabsContent value="table" className="space-y-4">
           <Card>
             <CardContent className="mt-5">
-              <CompanyTable data={companies} refreshData={() => refreshData()} />
+              <CompanyTable
+                data={companies}
+                refreshData={() => refreshData()}
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -262,6 +276,15 @@ export default function Home() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="mail">
+          <MailList
+            data={mailingList}
+            refreshData={() => {
+              refreshData();
+            }}
+          />
         </TabsContent>
       </Tabs>
     </div>

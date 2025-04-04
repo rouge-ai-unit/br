@@ -27,13 +27,18 @@ import {
   Linkedin,
   Pencil,
   Trash,
+  TimerIcon,
+  CheckCircle,
+  Timer,
+  Mail,
 } from "lucide-react";
 import { db } from "@/utils/dbConfig";
 import { toast } from "sonner";
-import { Companies } from "@/utils/schema";
+import { Companies, MailingList } from "@/utils/schema";
 import { eq } from "drizzle-orm";
 import Link from "next/link";
 import { FaLinkedin } from "react-icons/fa";
+import { Badge } from "./ui/badge";
 
 export function CompanyTable({ data, refreshData }) {
   const [selectedCompany, setSelectedCompany] = useState(null);
@@ -91,6 +96,39 @@ export function CompanyTable({ data, refreshData }) {
     setIsEditOpen(false);
     setSelectedCompany(null);
     console.log(editData);
+  };
+
+  const addToMailList = async (company) => {
+    console.log(company);
+    const mail = await db
+      .insert(MailingList)
+      .values({
+        id: company.id,
+        companyName: company.companyName,
+        region: company.region,
+        companyWebsite: company.companyWebsite,
+        companyLinkedin: company.companyLinkedin,
+        industryFocus: company.industryFocus,
+        offerings: company.offerings,
+        marketingPosition: company.marketingPosition,
+        potentialPainPoints: company.potentialPainPoints,
+        contactName: company.contactName,
+        contactPosition: company.contactPosition,
+        linkedin: company.linkedin,
+        contactEmail: company.contactEmail,
+      })
+      .returning({ companyName: Companies.companyName });
+
+    const result = await db
+      .update(Companies)
+      .set({
+        addedToMailList: true,
+      })
+      .where(eq(Companies.id, company.id))
+      .returning();
+
+    toast.success("Company Added to Mailing List Successfully!");
+    refreshData();
   };
 
   // Function to export data as CSV
@@ -175,6 +213,8 @@ export function CompanyTable({ data, refreshData }) {
               <TableHead>Contact Position</TableHead>
               <TableHead>Contact LinkedIn</TableHead>
               <TableHead>Contact Email</TableHead>
+              <TableHead>Mailing Status</TableHead>
+              <TableHead>Add to Mail List</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -204,13 +244,17 @@ export function CompanyTable({ data, refreshData }) {
                   <TableCell>{company.companyName}</TableCell>
                   <TableCell>
                     {company.companyWebsite ? (
-                      <a
-                        href={company.companyWebsite}
+                      <Link
+                        href={`${
+                          company.companyWebsite.startsWith("https")
+                            ? company.companyWebsite
+                            : "https://" + company.companyWebsite
+                        }/`}
                         target="_blank"
                         className="flex items-centercenter gap-1 text-blue-500 hover:underline"
                       >
                         Visit <ExternalLink size={20} />
-                      </a>
+                      </Link>
                     ) : (
                       "N/A"
                     )}
@@ -249,6 +293,39 @@ export function CompanyTable({ data, refreshData }) {
                     )}
                   </TableCell>
                   <TableCell>{company.contactEmail}</TableCell>
+                  <TableCell>
+                    {company.isMailed ? (
+                      // ✅ Mailed successfully (Green)
+                      <Badge className="flex items-center gap-1 rounded-full text-xs bg-green-500 text-white px-2 py-1">
+                        <CheckCircle size={16} className="mr-1" />
+                        Mailed
+                      </Badge>
+                    ) : company.addedToMailList ? (
+                      // 📩 Added to Mailing List (Blue)
+                      <Badge className="flex items-center gap-1 rounded-full text-xs bg-blue-500 text-white px-2 py-1">
+                        <Mail size={16} />
+                        Added
+                      </Badge>
+                    ) : (
+                      // ⏳ Pending (Yellow-Orange) with animation & hover effect
+                      <Badge
+                        className="flex items-center gap-1 rounded-full text-xs bg-yellow-500 text-black px-2 py-1 animate-pulse hover:bg-yellow-600 hover:cursor-pointer transition-all duration-[3000ms]"
+                        onClick={() => alert("Added to Mailing List")}
+                      >
+                        <Timer size={16} className="mr-1" />
+                        Pending
+                      </Badge>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant={"outline"}
+                      disabled={company.addedToMailList}
+                      onClick={() => addToMailList(company)}
+                    >
+                      Add to Mail List
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))
             ) : (
@@ -301,7 +378,19 @@ export function CompanyTable({ data, refreshData }) {
                   placeholder="Company Website"
                   id="companyWebsite"
                 />
-                <Link href={editData.companyWebsite} target="_blank">
+                <Link
+                  href={
+                    editData.companyWebsite
+                      ? `${
+                          editData.companyWebsite.startsWith("http://") ||
+                          editData.companyWebsite.startsWith("https://")
+                            ? editData.companyWebsite
+                            : "https://" + editData.companyWebsite
+                        }`
+                      : "#"
+                  }
+                  target="_blank"
+                >
                   <Button>
                     <ExternalLink />
                   </Button>
