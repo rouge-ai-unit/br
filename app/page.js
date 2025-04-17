@@ -12,7 +12,6 @@ import { CompanyTable } from "@/components/CompanyTable";
 import { db } from "@/utils/dbConfig";
 import { Companies } from "@/utils/schema";
 import { toast } from "sonner";
-import { MailList } from "@/components/MailingList";
 
 export default function Home() {
   const [companies, setCompanies] = useState([]);
@@ -276,15 +275,6 @@ export default function Home() {
               )}
             </CardContent>
           </Card>
-        </TabsContent>
-
-        <TabsContent value="mail">
-          <MailList
-            data={mailingList}
-            refreshData={() => {
-              refreshData();
-            }}
-          />
         </TabsContent>
       </Tabs>
     </div>

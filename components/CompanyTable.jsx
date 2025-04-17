@@ -213,8 +213,6 @@ export function CompanyTable({ data, refreshData }) {
               <TableHead>Contact Position</TableHead>
               <TableHead>Contact LinkedIn</TableHead>
               <TableHead>Contact Email</TableHead>
-              <TableHead>Mailing Status</TableHead>
-              <TableHead>Add to Mail List</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -293,39 +291,6 @@ export function CompanyTable({ data, refreshData }) {
                     )}
                   </TableCell>
                   <TableCell>{company.contactEmail}</TableCell>
-                  <TableCell>
-                    {company.isMailed ? (
-                      // ✅ Mailed successfully (Green)
-                      <Badge className="flex items-center gap-1 rounded-full text-xs bg-green-500 text-white px-2 py-1">
-                        <CheckCircle size={16} className="mr-1" />
-                        Mailed
-                      </Badge>
-                    ) : company.addedToMailList ? (
-                      // 📩 Added to Mailing List (Blue)
-                      <Badge className="flex items-center gap-1 rounded-full text-xs bg-blue-500 text-white px-2 py-1">
-                        <Mail size={16} />
-                        Added
-                      </Badge>
-                    ) : (
-                      // ⏳ Pending (Yellow-Orange) with animation & hover effect
-                      <Badge
-                        className="flex items-center gap-1 rounded-full text-xs bg-yellow-500 text-black px-2 py-1 animate-pulse hover:bg-yellow-600 hover:cursor-pointer transition-all duration-[3000ms]"
-                        onClick={() => alert("Added to Mailing List")}
-                      >
-                        <Timer size={16} className="mr-1" />
-                        Pending
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      variant={"outline"}
-                      disabled={company.addedToMailList}
-                      onClick={() => addToMailList(company)}
-                    >
-                      Add to Mail List
-                    </Button>
-                  </TableCell>
                 </TableRow>
               ))
             ) : (
@@ -355,7 +320,7 @@ export function CompanyTable({ data, refreshData }) {
             <div>
               <label htmlFor="companyName" className="text-xs font-bold">
                 Company Name
-              </label>
+            </label>
               <Input
                 value={editData.companyName || ""}
                 onChange={(e) =>
@@ -565,7 +530,7 @@ export function CompanyTable({ data, refreshData }) {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-        <DialogContent>
+        <DialogContent className="fixed h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Confirm Delete</DialogTitle>
             <DialogDescription>
