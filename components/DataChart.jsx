@@ -6,12 +6,11 @@ import {
   Pie,
   Cell,
   ResponsiveContainer,
-  Legend,
+  Tooltip,
   BarChart,
   Bar,
   XAxis,
   YAxis,
-  Tooltip,
   CartesianGrid,
 } from "recharts";
 
@@ -25,14 +24,12 @@ const COLORS = [
 
 export function DataChart({ data, type }) {
   const chartData = useMemo(() => {
-    // Ensure data is valid
     const validData = data?.filter(
       (company) => company && company.companyName?.trim() !== ""
     );
 
     if (!validData || validData.length === 0) return [];
 
-    // 📌 Region & Industry Distribution (Pie Chart)
     if (type === "region" || type === "industry") {
       const counts = validData.reduce((acc, company) => {
         const key = type === "region" ? company.region : company.industryFocus;
@@ -41,13 +38,11 @@ export function DataChart({ data, type }) {
         }
         return acc;
       }, {});
-
       return Object.entries(counts)
         .map(([name, value]) => ({ name, value }))
         .sort((a, b) => b.value - a.value);
     }
 
-    // 📌 Revenue Distribution (Bar Chart)
     if (type === "revenue") {
       return validData
         .filter(
@@ -55,12 +50,11 @@ export function DataChart({ data, type }) {
         )
         .map((company) => ({
           name: company.companyName,
-          value: parseFloat(company.revenue) / 1_000_000, // Convert to millions
+          value: parseFloat(company.revenue) / 1_000_000,
         }))
         .sort((a, b) => b.value - a.value);
     }
 
-    // 📌 Market Share Distribution (Bar Chart)
     if (type === "marketShare") {
       return validData
         .filter(
@@ -74,7 +68,6 @@ export function DataChart({ data, type }) {
         .sort((a, b) => b.value - a.value);
     }
 
-    // 📌 Employee Count Distribution (Bar Chart)
     if (type === "employeeSize") {
       return validData
         .filter(
@@ -88,7 +81,6 @@ export function DataChart({ data, type }) {
         .sort((a, b) => b.value - a.value);
     }
 
-    // 📌 Tech Stack Usage (Pie Chart)
     if (type === "techStack") {
       const counts = validData.reduce((acc, company) => {
         if (Array.isArray(company.techStack)) {
@@ -100,7 +92,6 @@ export function DataChart({ data, type }) {
         }
         return acc;
       }, {});
-
       return Object.entries(counts)
         .map(([name, value]) => ({ name, value }))
         .sort((a, b) => b.value - a.value);
@@ -117,11 +108,12 @@ export function DataChart({ data, type }) {
     );
   }
 
-  // 📌 Render Pie Chart for categorical data
+  // Pie Chart (with tooltip on hover only)
   if (["region", "industry", "techStack"].includes(type)) {
     return (
       <ResponsiveContainer width="100%" height={300}>
         <PieChart>
+          <Tooltip />
           <Pie
             data={chartData}
             cx="50%"
@@ -137,13 +129,12 @@ export function DataChart({ data, type }) {
               />
             ))}
           </Pie>
-          <Legend />
         </PieChart>
       </ResponsiveContainer>
     );
   }
 
-  // 📌 Render Bar Chart for numerical data
+  // Bar Chart
   return (
     <ResponsiveContainer width="100%" height={300}>
       <BarChart
