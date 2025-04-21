@@ -161,7 +161,7 @@ export default function Home() {
 
         {/* Analytics Section */}
         <TabsContent value="analytics" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
             <Card>
               <CardHeader>
                 <CardTitle>Companies by Region</CardTitle>
@@ -177,42 +177,6 @@ export default function Home() {
               </CardHeader>
               <CardContent>
                 <DataChart data={companies} type="industry" />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Revenue Distribution ($M)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <DataChart data={companies} type="revenue" />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Market Share (%)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <DataChart data={companies} type="marketShare" />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Employee Count</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <DataChart data={companies} type="employeeSize" />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Technology Stack Usage</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <DataChart data={companies} type="techStack" />
               </CardContent>
             </Card>
           </div>
